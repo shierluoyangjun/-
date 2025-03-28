@@ -2,25 +2,25 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-# 设置 matplotlib 的字体
-plt.rcParams['font.family'] = 'SimHei'  # 使用黑体字体，可根据系统情况替换为其他中文字体
+# 设置 matplotlib 的字体，你可以根据自己的系统选择合适的字体
+plt.rcParams['font.family'] = 'SimHei'  
 plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
 
-# 原始数据
+#这是我的原始数据，根据实际情况输入你的
 data = {
     "次数": [200, 400, 600, 800, 1000, 1200],
     "平面镜位置": [53.63201, 53.7037, 53.76111, 53.82245, 53.89835, 53.97285]
 }
 df = pd.DataFrame(data)
 
-# 逐差法处理
+# 逐差法
 group1 = df["平面镜位置"][:3].values  # 前三组
 group2 = df["平面镜位置"][3:].values  # 后三组
 delta_d = group2 - group1
 delta_N = 600  # 每次的ΔN为600次
 delta_d_avg = np.mean(delta_d)
 
-# 计算波长（单位：nm）
+# 计算波长 nm
 lambda_wave = 2 * delta_d_avg * 1e6 / delta_N  # 1 mm = 1e6 nm
 
 # 数据可视化
@@ -61,7 +61,7 @@ sigma_lambda = np.std(2 * delta_d * 1e6 / delta_N)
 
 # 误差来源可视化
 error_sources = {
-    "测量误差 (±0.001 mm)": 0.001 * 2e6 / 600,  # 转换为波长误差
+    "测量误差 (±0.001 mm)": 0.001 * 2e6 / 600,
     "Δd波动": sigma_lambda,
     "系统误差（理论值标定）": 5  # 假设标定误差为5 nm
 }
@@ -74,14 +74,13 @@ plt.xlabel("波长误差贡献 (nm)")
 plt.title("主要误差来源贡献分析")
 plt.grid(axis="x", linestyle="--")
 
-# 添加数据标签
 for bar in bars:
     width = bar.get_width()
     plt.text(width, bar.get_y() + bar.get_height()/2, f'{width:.2f}', ha='left', va='center')
 
 plt.show()
 
-# 输出误差结果
+# 输出误差
 print(f"绝对误差：{abs_error:.2f} nm")
 print(f"相对误差：{rel_error:.2f}%")
 print(f"Δd波动导致的波长波动：±{sigma_lambda:.2f} nm")
