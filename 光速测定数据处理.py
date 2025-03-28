@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from matplotlib import rcParams
 
-# ，根据你的情况决定是否替换SimHei
+# 根据你的情况决定是否替换SimHei
 rcParams['font.sans-serif'] = ['SimHei']  
 rcParams['axes.unicode_minus'] = False   
 
