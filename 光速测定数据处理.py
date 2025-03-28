@@ -1,124 +1,71 @@
+import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.font_manager import FontProperties
-from matplotlib.table import Table
+from matplotlib import rcParams
 
-# 设置全局字体
-font = FontProperties(family='SimHei', size=12)
-plt.rcParams['font.family'] = font.get_name()
+# ，根据你的情况决定是否替换SimHei
+rcParams['font.sans-serif'] = ['SimHei']  
+rcParams['axes.unicode_minus'] = False   
 
-# 等相间距法数据处理
-equidistant_data = {
-    '位置': ['x0', 'x1', 'x2', 'x3', 'x4'],
-    '读数(cm)': [5.00, 15.00, 25.00, 35.00, 45.00],
-    'Δx = xi - x0 (cm)': [0, 10.00, 20.00, 30.00, 40.00],
-    '测相信号相移距离(格)': [0, 1.4, 2.9, 4.2, 5.9],
-    '测相信号相移量(弧度)': [0] + [2 * np.pi / 22 * x for x in [1.4, 2.9, 4.2, 5.9]],
-    '载波波长λ = 2π / φ × 2Δx (m)': [0] + [2 * np.pi * 2 * d / (2 * np.pi / 22 * p) / 100 for d, p in zip([10, 20, 30, 40], [1.4, 2.9, 4.2, 5.9])],
-    '波长平均(m)': [3.06] * 5
+
+# 解析表格数据
+数据1 = {
+    'C_m': [4, 10, 12],
+    'c_m': [38.4, 45.2, 46.3],
+    'x0': [4, 9.9, 12]  # x0列最后一个值原图为空格，这里用NaN表示
 }
-equidistant_df = pd.DataFrame(equidistant_data)
-frequency = 100 * 10 ** 6
-equidistant_df['光速 C = λf (m/s)'] = equidistant_df['波长平均(m)'] * frequency
-accepted_speed_of_light = 2.998 * 10 ** 8
-equidistant_df['误差(%)'] = np.abs((equidistant_df['光速 C = λf (m/s)'] - accepted_speed_of_light) / accepted_speed_of_light) * 100
+数据1['x0'][-1] = np.nan
+表格1 = pd.DataFrame(数据1)
+D_i值 = [24.4, 24.3]
+λ值 = [35.2, 34.3]
 
-# 等相位法数据处理
-equal_phase_data = {
-    '相位位置(度)': [81.82, 81.82, 81.82],
-    'x0 (cm)': [4, 10, 12],
-    'xi (cm)': [38.4, 45.2, 46.3],
-    'x0\' (cm)': [4, 9.9, 12.1],
-    'x0平均 (cm)': [4, 10, 12],
-    'Di = xi - x0 (cm)': [34.4, 35.2, 34.3],
-    '×2Di (cm)': [2 * 34.4, 2 * 35.2, 2 * 34.3],
-    '载波波长λ = 2π / φ × 2Di (m)': [2 * np.pi * 2 * 34.4 / (81.82 * np.pi / 180) / 100,
-                                       2 * np.pi * 2 * 35.2 / (81.82 * np.pi / 180) / 100,
-                                       2 * np.pi * 2 * 34.3 / (81.82 * np.pi / 180) / 100],
-    '波长平均λ (m)': [3.02, 3.05, 3.01]
+# 解析表格数据
+数据2 = {
+    '读数_X': ['X0', 'X1', 'X2', 'X3'],
+    'C×V': [5.00, 15.00, 35.00, 45.00],
+    '|λ1−λ2|−λ3': [10.00, 20.00, 30.00, 40.00]
 }
-equal_phase_df = pd.DataFrame(equal_phase_data)
-equal_phase_df['光速 C = λf (m/s)'] = equal_phase_df['波长平均λ (m)'] * frequency
-equal_phase_df['误差(%)'] = np.abs((equal_phase_df['光速 C = λf (m/s)'] - accepted_speed_of_light) / accepted_speed_of_light) * 100
+表格2 = pd.DataFrame(数据2)
+plt.figure(figsize=(14, 10))
 
-# 绘制等相间距法表格图像
-fig_table_equidistant, ax_table_equidistant = plt.subplots()
-ax_table_equidistant.axis('off')
-table_equidistant = Table(ax_table_equidistant)
-nrows, ncols = equidistant_df.shape
-width, height = 1.0 / ncols, 1.0 / nrows
+# 第一个数据可视化
+plt.subplot(2, 2, 1)
+plt.plot(表格1['C_m'], 表格1['c_m'], 'o-', label='c_m 随 C_m 变化')
+plt.xlabel('C_m (单位)')
+plt.ylabel('c_m (单位)')
+plt.title('文件1数据关系图')
+plt.grid(True)
 
-for (i, j), val in np.ndenumerate(equidistant_df):
-    cell = table_equidistant.add_cell(i, j, width, height, text=val, loc='center', edgecolor='w')
-    cell.set_fontsize(14)  # 单独设置字体大小
+# 第二个数据可视化（柱状图）
+plt.subplot(2, 2, 2)
+plt.bar(表格2['读数_X'], 表格2['C×V'], alpha=0.6, label='C×V 值')
+plt.xlabel('读数点')
+plt.ylabel('C×V (单位)')
+plt.title('文件2数据分布')
+plt.legend()
 
-for j, col in enumerate(equidistant_df.columns):
-    cell = table_equidistant.add_cell(-1, j, width, height, text=col, loc='center', facecolor='lightgray')
-    cell.set_fontsize(14)  # 单独设置字体大小
+# 波长计算结果可视化
+plt.subplot(2, 2, 3)
+plt.plot(D_i值, λ值, 's--', color='red', label='波长λ')
+plt.xlabel('D_i (单位)')
+plt.ylabel('λ (米)')
+plt.title('波长计算结果')
+plt.legend()
+plt.grid(True)
 
-ax_table_equidistant.add_table(table_equidistant)
-ax_table_equidistant.set_title('等相间距法数据表格', fontproperties=font)
+# 误差分析可视化
+plt.subplot(2, 2, 4)
+误差值 = [2.25, 1.77]
+标签 = ['误差1', '误差2']
+bars = plt.bar(标签, 误差值, color=['#1f77b4', '#ff7f0e'])
+plt.ylabel('误差百分比 (%)')
+plt.title('实验误差分析')
+# 在柱子上标注数值
+for bar in bars:
+    height = bar.get_height()
+    plt.text(bar.get_x() + bar.get_width()/2., height,
+             f'{height}%', ha='center', va='bottom')
 
-# 绘制等相位法表格图像
-fig_table_equal_phase, ax_table_equal_phase = plt.subplots()
-ax_table_equal_phase.axis('off')
-table_equal_phase = Table(ax_table_equal_phase)
-nrows, ncols = equal_phase_df.shape
-width, height = 1.0 / ncols, 1.0 / nrows
-
-for (i, j), val in np.ndenumerate(equal_phase_df):
-    cell = table_equal_phase.add_cell(i, j, width, height, text=val, loc='center', edgecolor='w')
-    cell.set_fontsize(14)  # 单独设置字体大小
-
-for j, col in enumerate(equal_phase_df.columns):
-    cell = table_equal_phase.add_cell(-1, j, width, height, text=col, loc='center', facecolor='lightgray')
-    cell.set_fontsize(14)  # 单独设置字体大小
-
-ax_table_equal_phase.add_table(table_equal_phase)
-ax_table_equal_phase.set_title('等相位法数据表格', fontproperties=font)
-
-# 误差分析文本
-equidistant_error_analysis = f"等相间距法平均误差: {equidistant_df['误差(%)'].mean():.2f}%"
-equal_phase_error_analysis = f"等相位法平均误差: {equal_phase_df['误差(%)'].mean():.2f}%"
-
-# 绘制误差柱状图
-labels = ['等相间距法', '等相位法']
-errors = [equidistant_df['误差(%)'].mean(), equal_phase_df['误差(%)'].mean()]
-
-x = np.arange(len(labels))
-width = 0.4
-
-fig, ax = plt.subplots()
-rects = ax.bar(x, errors, width)
-
-ax.set_ylabel('误差(%)', fontproperties=font)
-ax.set_title('不同方法光速测定误差对比', fontproperties=font)
-ax.set_xticks(x)
-ax.set_xticklabels(labels, fontproperties=font)
-
-
-def autolabel(rects):
-    for rect in rects:
-        height = rect.get_height()
-        ax.annotate('{:.2f}%'.format(height),
-                    xy=(rect.get_x() + rect.get_width() / 2, height),
-                    xytext=(0, 3),
-                    textcoords="offset points",
-                    ha='center', va='bottom', fontproperties=font)
-
-
-autolabel(rects)
-
-# 显示图像
+plt.tight_layout()
+plt.savefig('分析结果.png', dpi=300, bbox_inches='tight')
 plt.show()
-
-# 打印表格
-print("等相间距法数据表格：")
-print(equidistant_df)
-print("\n等相位法数据表格：")
-print(equal_phase_df)
-# 打印误差分析文本
-print("\n误差分析：")
-print(equidistant_error_analysis)
-print(equal_phase_error_analysis)
